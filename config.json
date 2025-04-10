@@ -1,0 +1,10 @@
+{
+	"source_path": "./GameofLife.c",
+	"executable_path": "./GameofLife",
+	"input_path": "./InputData",
+	"output_path": "./output",
+	"ref_path": "./RefData",
+	"forward_path": "./forward",
+	"run_valgrind": true,
+	"tutorial": false
+}
