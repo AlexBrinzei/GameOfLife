@@ -64,10 +64,19 @@ void rules(char **mat, int n, int m)
             }
 
             if (mat[i][j] == 'X') {
-                aux[i][j] = (neighbours_alive < 2 || neighbours_alive > 3) ? '+' : 'X';
+                if (neighbours_alive < 2 || neighbours_alive > 3) {
+                    aux[i][j] = '+';
+                } else {
+                    aux[i][j] = 'X';
+                }
             } else {
-                aux[i][j] = (neighbours_alive == 3) ? 'X' : '+';
+                if (neighbours_alive == 3) {
+                    aux[i][j] = 'X';
+                } else {
+                    aux[i][j] = '+';
+                }
             }
+            
         }
     }
 
