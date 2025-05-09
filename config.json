@@ -1,6 +1,6 @@
 {
-	"source_path": "./GameofLife.c",
-	"executable_path": "./GameofLife",
+	"source_path": "./main.c",
+	"executable_path": "./task2",
 	"input_path": "./InputData",
 	"output_path": "./output",
 	"ref_path": "./RefData",

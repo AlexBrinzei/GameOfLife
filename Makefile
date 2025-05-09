@@ -1,22 +1,22 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
+CFLAGS = -Wall -Wextra -std=c99 -g
 
 SRC = main.c header.c
 OBJ = $(SRC:.c=.o)
-EXEC = program.exe
+EXEC = game_of_life
 
 all: $(EXEC)
 
 $(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $(EXEC) $(OBJ)
 
 %.o: %.c header.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 run: $(EXEC)
-	./$(EXEC) InputData/input.txt output/output.txt
+	./$(EXEC)
 
 clean:
-	del /Q *.o *.exe 2>nul || rm -f *.o *.exe
+	rm -f *.o $(EXEC) output.txt
 
-.PHONY: all clean run
+.PHONY: all run clean
