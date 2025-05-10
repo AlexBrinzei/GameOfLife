@@ -79,7 +79,7 @@ int main(int argc, const char *argv[])
      free_matrix(mat, n);
      free_matrix(prev_gen, n);
      fclose(file);
-     fclose(output);
+     fclose(output);                    
     }
  
      return 0;

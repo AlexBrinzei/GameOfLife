@@ -37,12 +37,11 @@ void free_matrix(char **mat, int n);
 //Functie pentru creare celula
 
 CellNode* create_cell_node(int row, int col);
-void add_cell(CellNode **head, int row, int col);
-void print_cell_list(CellNode *head);
+
 void delete_cell_list(CellNode **head);
 int isEmpty(Generation *top);
 void push(Generation **top, CellNode *cellList);
-void print_stack(Generation *top, FILE *fout);
+
 CellNode* pop_stack(Generation **top);
 void delete_stack(Generation **top);
 
