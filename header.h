@@ -22,17 +22,60 @@ typedef struct Generation
 }Generation;
 
 
+
+// ‣ Task 3: arborele de diffs
+typedef struct Tree {
+    CellNode *diffs;        // lista coordonatelor modificate față de părinte
+    struct Tree *left;      // ramura regula B
+    struct Tree *right;     // ramura regula standard
+} Tree;
+
+// Generează o nouă matrice după regula B și o returnează
+char **apply_rule_B(char **mat, int n, int m);
+
+// Copiază o matrice și o returnează
+char **copy_matrix(char **mat, int n, int m);
+
+// Construcție arbore de diffs: prev = generația părinte, cur = generația curentă
+Tree *build_diff_tree(char **prev, char **cur, int n, int m, int depth, int K);
+
+// Parcurgere preordine: printează cur, apoi B, apoi standard
+void traverse_tree(Tree *root, char **cur, int n, int m, int depth, int K, FILE *output);
+
+
+// Eliberare arbore (doar noduri + liste de diffs)
+void free_tree(Tree *root);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Functie de citire din fisier
 void read_file(FILE *file, int *t, int *n, int *m, int *k, char ***mat);
 
 // Functie care aplica regulile jocului
-void rules(char **mat, int n, int m);
+int rules(char **mat, int n, int m);
 
 // Functie care afiseaza matricea in fisierul de iesire
 void display(char **mat, int n, int m, FILE *output);
 
 // Functie care elibereaza memoria matricei
 void free_matrix(char **mat, int n);
+
+
+
+
+
 
 //Functie pentru creare celula
 
