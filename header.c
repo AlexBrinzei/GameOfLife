@@ -119,28 +119,34 @@ void read_file(FILE *file, int *t, int *n, int *m, int *k, char ***mat)
 // }
 
 int rules(char **mat, int n, int m) {
-    char **aux = malloc(n * sizeof(char*));
+    char **aux = malloc(n * sizeof(char*));  // matricea auxiliară pentru a salva rezultatele
     for (int i = 0; i < n; i++) {
         aux[i] = malloc(m);
         for (int j = 0; j < m; j++) {
-            int cnt = 0;
+            int cnt = 0;  // numărăm vecinii vii
+
+            // Parcurgem vecinii pentru fiecare celulă
             for (int di = -1; di <= 1; di++) {
                 for (int dj = -1; dj <= 1; dj++) {
-                    if (di == 0 && dj == 0) continue;
+                    if (di == 0 && dj == 0) continue;  // să nu numărăm celula curentă
                     int ni = i + di, nj = j + dj;
                     if (ni >= 0 && ni < n && nj >= 0 && nj < m && mat[ni][nj] == 'X')
-                        cnt++;
+                        cnt++;  // creștem numărul de vecini vii
                 }
             }
 
+            // Aplicăm regulile jocului:
             if (mat[i][j] == 'X') {
-                aux[i][j] = (cnt == 2 || cnt == 3) ? 'X' : '+';
+                // Celulă vie rămâne vie dacă are 2 sau 3 vecini vii
+                aux[i][j] = (cnt == 2 || cnt == 3) ? 'X' : '+';  // rămâne vie sau moare
             } else {
-                aux[i][j] = (cnt == 3) ? 'X' : '+';
+                // Celulă moartă devine vie doar dacă are exact 3 vecini vii
+                aux[i][j] = (cnt == 3) ? 'X' : '+';  // devine vie sau rămâne moartă
             }
         }
     }
 
+    // Copiem rezultatele în matricea originală
     for (int i = 0; i < n; i++) {
         memcpy(mat[i], aux[i], m);
         free(aux[i]);
@@ -148,6 +154,7 @@ int rules(char **mat, int n, int m) {
     free(aux);
     return 0;
 }
+
 
 
 
@@ -163,11 +170,12 @@ void free_matrix(char **mat, int n)
 
 void display(char **mat, int n, int m, FILE *output) {
     for (int i = 0; i < n; i++) {
-        fwrite(mat[i], 1, m, output);
-        fputc('\n', output);
+        fwrite(mat[i], 1, m, output);  // scrie fix m caractere, fără spații
+        fputc('\n', output);            // newline după fiecare linie
     }
-    fputc('\n', output); // doar între generații, nu la final
+    fputc('\n', output);               // linie goală între matrici
 }
+
 
 
 // Functii pentru task 2
@@ -345,25 +353,39 @@ void write_stack_to_file(Generation *top, FILE *f)
 
 
 // === implementare apply_rule_B ===
-char **apply_rule_B(char **mat, int n, int m) {
-    char **aux = malloc(n * sizeof(char*));
+char **apply_rule_B(char **matrice, int n, int m) {
+    char **copie = malloc(n * sizeof(char *));  // Alocăm matricea auxiliară
     for (int i = 0; i < n; i++) {
-        aux[i] = malloc(m);
+        copie[i] = malloc(m);  // Alocăm fiecare rând
+
         for (int j = 0; j < m; j++) {
-            int cnt = 0;
+            int nr_vecini = 0;  // Inițializăm numărul de vecini vii
+
+            // Calculăm numărul de vecini vii pentru fiecare celulă
             for (int di = -1; di <= 1; di++) {
                 for (int dj = -1; dj <= 1; dj++) {
-                    if (di == 0 && dj == 0) continue;
+                    if (di == 0 && dj == 0) continue;  // Să nu numărăm celula curentă
                     int ni = i + di, nj = j + dj;
-                    if (ni >= 0 && ni < n && nj >= 0 && nj < m && mat[ni][nj] == 'X')
-                        cnt++;
+                    if (ni >= 0 && ni < n && nj >= 0 && nj < m && matrice[ni][nj] == 'X') {
+                        nr_vecini++;  // Creștem numărul de vecini vii
+                    }
                 }
             }
-            aux[i][j] = (cnt == 2 ? 'X' : '+');  // doar cu 2 vecini vii devine vie
+
+            // Noua regulă: celula moartă devine vie dacă are exact 2 vecini vii
+            if (matrice[i][j] == '+' && nr_vecini == 2) {
+                copie[i][j] = 'X';  // Celula moartă devine vie
+            } else {
+                copie[i][j] = matrice[i][j];  // Altfel, păstrează starea actuală
+            }
         }
     }
-    return aux;
+
+    return copie;  // Returnează matricea modificată
 }
+
+
+
 
 
 
@@ -386,48 +408,54 @@ char **copy_matrix(char **mat, int n, int m)
 // diffs (folosim gen_differences din Task 2)
 
 // === construcție arbore de diffs ===
-Tree *build_diff_tree(char **prev, char **cur, int n, int m, int depth, int K)
-{
-    Tree *node = malloc(sizeof(Tree));
-    node->diffs = gen_differences(prev, cur, n, m);
-    node->left = node->right = NULL;
+// Funcție pentru a construi arborele de diferențe
+Tree *build_diff_tree(char **prev, char **cur, int n, int m, int depth, int K) {
+    Tree *node = malloc(sizeof(Tree));  // Alocă un nod pentru arbore
+    node->diffs = gen_differences(prev, cur, n, m);  // Salvează diferențele între generații
+    node->left = node->right = NULL;  // Inițializăm ramurile stânga și dreapta ca NULL
 
-    if (depth < K)
-    {
-        // Stânga = regula B
-        char **matB = apply_rule_B(cur, n, m);
-        node->left = build_diff_tree(cur, matB, n, m, depth + 1, K);
+    if (depth < K) {
+        // Aplicația regulii B pentru ramura stângă
+        char **matB = apply_rule_B(cur, n, m);  // Aplică regula B
+        node->left = build_diff_tree(cur, matB, n, m, depth + 1, K);  // Apel recursiv pentru ramura stângă
         free_matrix(matB, n);
 
-        // Dreapta = regula standard
-        char **matS = copy_matrix(cur, n, m);
-        rules(matS, n, m);
-        node->right = build_diff_tree(cur, matS, n, m, depth + 1, K);
+        // Aplicația regulii standard pentru ramura dreaptă
+        char **matS = copy_matrix(cur, n, m);  // Copiază matricea curentă
+        rules(matS, n, m);  // Aplică regulile standard
+        node->right = build_diff_tree(cur, matS, n, m, depth + 1, K);  // Apel recursiv pentru ramura dreaptă
         free_matrix(matS, n);
     }
 
-    return node;
+    return node;  // Returnează nodul construit
 }
+
+
+
 
 // === parcurgere preordine ===
 void traverse_tree(Tree *root, char **cur, int n, int m, int depth, int K, FILE *output) {
     if (!root) return;
 
-    display(cur, n, m, output);  // afișează prima generație
+    // Afișăm generația curentă
+    display(cur, n, m, output);  // Afișează matricea curentă
 
+    // Continuăm să parcurgem arborele pe ramura stângă (cu regula B) și dreapta (cu regula standard)
     if (depth < K) {
-        // Parcurgere STÂNGA: aplica regula B
+        // Regula B pe stânga
         char **matB = apply_rule_B(cur, n, m);
-        traverse_tree(root->left, matB, n, m, depth + 1, K, output);
+        traverse_tree(root->left, matB, n, m, depth + 1, K, output);  // Recursivitate pe ramura stângă
         free_matrix(matB, n);
 
-        // Parcurgere DREAPTA: aplica regula standard
+        // Regula standard pe dreapta
         char **matS = copy_matrix(cur, n, m);
-        rules(matS, n, m);
-        traverse_tree(root->right, matS, n, m, depth + 1, K, output);
+        rules(matS, n, m);  // Aplică regulile standard
+        traverse_tree(root->right, matS, n, m, depth + 1, K, output);  // Recursivitate pe ramura dreaptă
         free_matrix(matS, n);
     }
 }
+
+
 
 
 

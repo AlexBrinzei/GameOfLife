@@ -116,18 +116,16 @@ int main(int argc, const char *argv[])
         char **empty = malloc(n * sizeof(char*));
         for (int i = 0; i < n; i++) {
             empty[i] = malloc(m);
-            memset(empty[i], '+', m);  // toate celulele moarte
+            memset(empty[i], '+', m);  // Toate celulele moarte
         }
     
+        // Construim arborele de diferențe pentru Task 3
         Tree *root = build_diff_tree(empty, mat, n, m, 0, k);
         
-        // Aplicăm regula B de n ori
-        for (int i = 0; i < n; i++) {
-            char **matB = apply_rule_B(mat, n, m);
-            traverse_tree(root, matB, n, m, 0, k, output);
-            free_matrix(matB, n);
-        }
-
+        // Aplicăm regula B și parcurgem arborele
+        traverse_tree(root, mat, n, m, 0, k, output);
+    
+        // Curățare memorie
         free_tree(root);
         free_matrix(empty, n);
         free_matrix(mat, n);
@@ -135,6 +133,10 @@ int main(int argc, const char *argv[])
         fclose(output);
         return 0;
     }
+    
+    
+    
+    
 
 
     return 0;
