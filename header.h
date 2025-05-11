@@ -4,96 +4,88 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 
-
-
-//o celula reprezentata de linie si coloana
+// definim o celula cu pozitia ei (linie si coloana)
 typedef struct CellNode
 {
     int row, col;
     struct CellNode *next;
-}CellNode;
+} CellNode;
 
+// reprezentam o generatie ca o lista de celule modificate
 typedef struct Generation
 {
-    CellNode *cells; //lista de celule modificate
+    CellNode *cells; // lista de celule active in generatie
     struct Generation *next;
-}Generation;
+} Generation;
 
-
-
-// ‣ Task 3: arborele de diffs
-typedef struct Tree {
-    CellNode *diffs;        // lista coordonatelor modificate față de părinte
-    struct Tree *left;      // ramura regula B
-    struct Tree *right;     // ramura regula standard
+// structura pentru arborele de diferente (task 3)
+typedef struct Tree
+{
+    CellNode *diffs;    // diferentele fata de parinte
+    struct Tree *left;  // ramura care aplica regula b
+    struct Tree *right; // ramura care aplica regula standard
 } Tree;
 
-// Generează o nouă matrice după regula B și o returnează
+// aplica regula b pe matrice si returneaza noua matrice generata
 char **apply_rule_B(char **mat, int n, int m);
 
-// Copiază o matrice și o returnează
+// face o copie a unei matrici
 char **copy_matrix(char **mat, int n, int m);
 
-// Construcție arbore de diffs: prev = generația părinte, cur = generația curentă
+// construieste arborele de diferente intre generatii (pornind de la o matrice initiala goala)
 Tree *build_diff_tree(char **prev, char **cur, int n, int m, int depth, int K);
 
-// Parcurgere preordine: printează cur, apoi B, apoi standard
+// parcurge arborele in preordine si afiseaza fiecare generatie in fisierul de iesire
 void traverse_tree(Tree *root, char **cur, int n, int m, int depth, int K, FILE *output);
 
-
-// Eliberare arbore (doar noduri + liste de diffs)
+// elibereaza memoria ocupata de arbore (inclusiv listele de diferente)
 void free_tree(Tree *root);
 
+//creaza matrice initializata cu caracterul fill, in cazul de la task 3 cu '+' pentru celule moarte
+char **create_empty_matrix(int n, int m, char fill);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Functie de citire din fisier
+// citeste datele de intrare din fisier
 void read_file(FILE *file, int *t, int *n, int *m, int *k, char ***mat);
 
-// Functie care aplica regulile jocului
+// aplica regulile jocului pe matrice
 int rules(char **mat, int n, int m);
 
-// Functie care afiseaza matricea in fisierul de iesire
+// afiseaza matricea curenta in fisierul de iesire
 void display(char **mat, int n, int m, FILE *output);
 
-// Functie care elibereaza memoria matricei
+// elibereaza memoria unei matrici
 void free_matrix(char **mat, int n);
 
+// creeaza o celula noua cu pozitia data
+CellNode *create_cell_node(int row, int col);
 
-
-
-
-
-//Functie pentru creare celula
-
-CellNode* create_cell_node(int row, int col);
-
+// elibereaza memoria unei liste de celule
 void delete_cell_list(CellNode **head);
+
+// verifica daca stiva de generatii este goala
 int isEmpty(Generation *top);
+
+// adauga o generatie noua in stiva
 void push(Generation **top, CellNode *cellList);
 
-CellNode* pop_stack(Generation **top);
+// scoate o generatie din stiva si returneaza lista de celule
+CellNode *pop_stack(Generation **top);
+
+// elibereaza toata stiva
 void delete_stack(Generation **top);
 
-// Functii pentru lucrul cu stiva de generatii
+// insereaza o celula in lista in ordine crescatoare
 void insert_cell_sorted(CellNode **head, int row, int col);
-void write_stack_to_file(Generation *top, FILE* f);
-// Functie care returneaza diferentele dintre doua generatii
-CellNode* gen_differences(char** old_gen, char** new_gen, int n, int m);
-Generation* reverse_stack(Generation *top);
 
-#endif 
+// scrie continutul stivei in fisier 
+void write_stack_to_file(Generation *top, FILE *f);
+
+// calculeaza diferentele dintre doua generatii
+CellNode *gen_differences(char **old_gen, char **new_gen, int n, int m);
+
+// inverseaza ordinea generatiilor din stiva
+Generation *reverse_stack(Generation *top);
+
+#endif
