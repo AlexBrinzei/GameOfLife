@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define MAXN 100 
 
 
 // definim o celula cu pozitia ei (linie si coloana)
@@ -88,4 +89,37 @@ CellNode *gen_differences(char **old_gen, char **new_gen, int n, int m);
 // inverseaza ordinea generatiilor din stiva
 Generation *reverse_stack(Generation *top);
 
+//bonus task 2
+// inverseaza celulele din matrice pe baza unei liste de diferente
+void apply_inverse(char **mat, CellNode *changes);
+
+// reconstruieste matricea initiala (generatia 0) din matricea finala si stiva de diferente
+void reconstruct_initial_state(char **mat, Generation **stack);
+
+
+
+// ================================================
+// Task 4: cel mai lung lanț Hamiltonian în graf
+// ================================================
+
+// solve_task4_file:
+//   N       = număr de noduri în graf
+//   adj     = matricea de adiacență NxN
+//   coords  = perechi (row,col) pentru fiecare nod global
+//   out     = fișierul de ieșire
+void solve_task4_file(int N, int adj[][MAXN], int coords[][2], FILE *out);
+
+// traverse_hamilton:
+//   parcurge arborele în preordine și la fiecare nod
+//   reconstruit curent (cur) în generația depth,
+//   construiește graful și rulează Task 4.
+void traverse_hamilton(
+    struct Tree *root,
+    char **cur,
+    int n,
+    int m,
+    int depth,
+    int K,
+    FILE *out
+);
 #endif

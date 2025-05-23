@@ -430,3 +430,340 @@ char **create_empty_matrix(int n, int m, char fill)
     }
     return mat;
 }
+
+//functii bonus task2
+// inverseaza celulele din matrice pe baza unei liste de diferente
+void apply_inverse(char **mat, CellNode *changes)
+{
+    while (changes)
+    {
+        int i = changes->row;
+        int j = changes->col;
+        mat[i][j] = (mat[i][j] == 'X') ? '+' : 'X'; // inversam starea
+        changes = changes->next;
+    }
+}
+
+// reconstruieste matricea initiala (generatia 0) din matricea finala si stiva de diferente
+void reconstruct_initial_state(char **mat, Generation **stack)
+{
+    while (!isEmpty(*stack))
+    {
+        CellNode *changes = pop_stack(stack); // scoatem ultima generatie
+        apply_inverse(mat, changes);          // aplicam inversul diferentei
+        delete_cell_list(&changes);           // eliberam memoria listei
+    }
+}
+
+
+// //task 4
+// static int best_len;
+// static int path_stack[100];
+// static int best_path[100];
+// static int gN;
+// static int (*gadj)[100];
+// static int visited_local[100];
+
+// // DFS backtracking pe graful global gN/gadj
+// static void dfs_bt(int u, int depth) {
+//     path_stack[depth-1] = u;
+//     if (depth > best_len) {
+//         best_len = depth;
+//         // copiem doar prefixul
+//         int i;
+//         for (i = 0; i < depth; i++) best_path[i] = path_stack[i];
+//     }
+//     // dacă am găsit lungime maximă, oprim
+//     if (best_len == gN) return;
+//     // parcurgem vecinii în ordine crescătoare a indexului
+//     for (u = 0; u < gN; u++) {
+//         if (gadj[path_stack[depth-1]][u] && !visited_local[u]) {
+//             visited_local[u] = 1;
+//             dfs_bt(u, depth+1);
+//             visited_local[u] = 0;
+//         }
+//     }
+// }
+
+// initializează gN/gadj și pornește DFS de pe fiecare nod
+// void solve_task4_file(int N, int adj[][100], FILE *out) {
+//     gN = N;
+//     gadj = adj;
+//     best_len = 0;
+//     int i;
+//     for (i = 0; i < N; i++) visited_local[i] = 0;
+//     for (i = 0; i < N; i++) {
+//         visited_local[i] = 1;
+//         dfs_bt(i, 1);
+//         visited_local[i] = 0;
+//         if (best_len == N) break;
+//     }
+//     // scriem rezultatul
+//     if (best_len <= 0) {
+//         fprintf(out, "-1\n");
+//     } else {
+//         fprintf(out, "%d\n", best_len);
+//         for (i = 0; i < best_len; i++) {
+//             int u = best_path[i];
+//             // afișăm ca (linie,coloană) = (u,u)
+//             fprintf(out, "(%d,%d) ", u, u);
+//         }
+//         fprintf(out, "\n");
+//     }
+// }
+
+
+//aproape afiseaza bine 
+// void display_changes(CellNode *changes, int gen_id, FILE *out)
+// {
+//     // 1. tipărim id-ul generației
+//     fprintf(out, "%d\n", gen_id);
+
+//     // 2. pentru fiecare nod din lista de changes
+//     for (CellNode *cur = changes; cur; cur = cur->next) {
+//         fprintf(out, "(%d,%d) ", cur->row, cur->col);
+//     }
+
+//     // 3. terminăm linia
+//     fprintf(out, "\n");
+// }
+
+
+// // ----------------------------------------------
+// // 2) Traverse Hamilton dar apelând acum display_changes
+// // ----------------------------------------------
+// void traverse_hamilton(
+//     Tree    *root,
+//     char   **cur,
+//     int      n,
+//     int      m,
+//     int      depth,  // vom folosi depth ca gen_id
+//     int      k,
+//     FILE    *out
+// ) {
+//     if (!root) return;
+
+//     // 1) afișăm diferențele de la acest nod, cu "gen_id" = depth
+//     display_changes(root->diffs, depth, out);
+
+//     // 2) dacă nu am ajuns la adâncimea K, continuăm
+//     if (depth < k) {
+//         // regula B
+//         char **matB = apply_rule_B(cur, n, m);
+//         traverse_hamilton(root->left,  matB, n, m, depth+1, k, out);
+//         free_matrix(matB, n);
+
+//         // regula standard
+//         char **matS = copy_matrix(cur, n, m);
+//         rules(matS, n, m);
+//         traverse_hamilton(root->right, matS, n, m, depth+1, k, out);
+//         free_matrix(matS, n);
+//     }
+// }
+
+// Helper DFS pentru Hamiltonian (backtracking cu tie-break lexicografic)
+static int best_len;
+static int path_stack[MAXN];
+static int best_path[MAXN];
+static int gN;
+static int gadj[MAXN][MAXN];
+static int visited_local[MAXN];
+static int best_coords[MAXN][2], temp_coords[MAXN][2];
+
+// compara două lanțuri de coordonate lexicografic
+static int lex_less(int a[][2], int b[][2], int len) {
+    for (int i = 0; i < len; i++) {
+        if (a[i][0] != b[i][0]) return a[i][0] < b[i][0];
+        if (a[i][1] != b[i][1]) return a[i][1] < b[i][1];
+    }
+    return 0;
+}
+
+static void dfs_bt(int u, int depth) {
+    path_stack[depth-1] = u;
+    if (depth > best_len) {
+        best_len = depth;
+        memcpy(best_path, path_stack, depth * sizeof(int));
+        // salvăm și coordonatele
+        for (int i = 0; i < depth; i++)
+            memcpy(best_coords[i], temp_coords[path_stack[i]], 2 * sizeof(int));
+    } else if (depth == best_len) {
+        // tie-break lexicografic
+        int candidate[MAXN][2];
+        for (int i = 0; i < depth; i++)
+            memcpy(candidate[i], temp_coords[path_stack[i]], 2 * sizeof(int));
+        if (lex_less(candidate, best_coords, depth)) {
+            for (int i = 0; i < depth; i++)
+                memcpy(best_coords[i], candidate[i], 2 * sizeof(int));
+        }
+    }
+    if (best_len == gN) return;  // optim prăjit
+
+    for (int v = 0; v < gN; v++) {
+        if (gadj[u][v] && !visited_local[v]) {
+            visited_local[v] = 1;
+            dfs_bt(v, depth+1);
+            visited_local[v] = 0;
+        }
+    }
+}
+
+void solve_task4_file(int N, int adj[][MAXN], int coords[][2], FILE *out) {
+    // 1) găsim componente conexe prin DFS simplu
+    int comp_id[MAXN] = {0}, comp_cnt = 0;
+    int seen[MAXN] = {0}, stack[MAXN], top;
+    for (int i = 0; i < N; i++) {
+        if (!seen[i]) {
+            top = 0; stack[top++] = i;
+            seen[i] = 1;
+            comp_id[i] = comp_cnt;
+            while (top) {
+                int u = stack[--top];
+                for (int v = 0; v < N; v++) if (adj[u][v] && !seen[v]) {
+                    seen[v] = 1;
+                    comp_id[v] = comp_cnt;
+                    stack[top++] = v;
+                }
+            }
+            comp_cnt++;
+        }
+    }
+
+    // 2) pentru fiecare componentă, extragem subgraf și coordonate
+    int best_overall = -1, best_comp = -1;
+    int best_output[MAXN][2], best_output_len = 0;
+    for (int c = 0; c < comp_cnt; c++) {
+        // colecționăm nodurile componentei
+        int idx = 0, map_local[MAXN];
+        for (int i = 0; i < N; i++)
+            if (comp_id[i] == c) map_local[i] = idx++;
+        gN = idx;
+        if (gN == 0) continue;
+
+        // construim matrice locală și coordonate locale
+        memset(gadj, 0, sizeof(gadj));
+        for (int i = 0; i < N; i++) if (comp_id[i] == c) {
+            int u = map_local[i];
+            memcpy(temp_coords[u], coords[i], 2*sizeof(int));
+            for (int j = 0; j < N; j++) if (comp_id[j] == c && adj[i][j]) {
+                int v = map_local[j];
+                gadj[u][v] = 1;
+            }
+        }
+
+        // Verificăm gradul nodurilor pentru excluderea componentelor imposibile
+        int degree[MAXN] = {0};
+        int deg_1_count = 0;
+        int isolated_node = 0;
+        for (int u = 0; u < gN; u++) {
+            int deg = 0;
+            for (int v = 0; v < gN; v++)
+                deg += gadj[u][v];
+            degree[u] = deg;
+            if (deg == 1) deg_1_count++;
+            if (deg == 0) isolated_node = 1;
+        }
+        if (isolated_node || deg_1_count > 2) {
+            // Componenta nu poate avea lanț Hamiltonian complet
+            continue;
+        }
+
+        // backtracking pe fiecare nod
+        best_len = 0;
+        memset(visited_local, 0, sizeof(visited_local));
+        for (int i = 0; i < gN; i++) {
+            visited_local[i] = 1;
+            dfs_bt(i, 1);
+            visited_local[i] = 0;
+            if (best_len == gN) break;
+        }
+
+        // comparăm cu soluția globală
+        if (best_len > best_overall) {
+            best_overall = best_len;
+            best_comp = c;
+            best_output_len = best_len;
+            memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
+        } else if (best_len == best_overall && best_len > 0) {
+            if (lex_less(best_coords, best_output, best_len)) {
+                best_output_len = best_len;
+                memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
+            }
+        }
+    }
+
+    // 3) tipărim rezultatul
+    if (best_overall <= 0) {
+        fprintf(out, "-1\n");
+    } else {
+        fprintf(out, "%d\n", best_overall - 1);
+        for (int i = 0; i < best_output_len; i++) {
+            fprintf(out, "(%d,%d)%c",
+                best_output[i][0],
+                best_output[i][1],
+                (i+1 < best_output_len ? ' ' : '\n'));
+        }
+    }
+}
+
+
+// traverse_hamilton: reconstruiește din matricea curentă graful și apelează solve_task4_file
+void traverse_hamilton(
+    Tree *root,
+    char **cur,
+    int n,
+    int m,
+    int depth,
+    int K,
+    FILE *out
+) {
+    if (!root) return;
+
+    // 1) colectăm coordonatele celulelor vii 'X'
+    int coords[MAXN][2], id_map[100][100], N = 0;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            id_map[i][j] = -1;
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            if (cur[i][j] == 'X') {
+                id_map[i][j] = N;
+                coords[N][0] = i;
+                coords[N][1] = j;
+                N++;
+            }
+        }
+    }
+
+    // 2) construim matricea de adiacență locale
+    static int adj_loc[MAXN][MAXN];
+    memset(adj_loc, 0, sizeof(adj_loc));
+    for (int i = 0; i < n; i++) for (int j = 0; j < m; j++) if (id_map[i][j] >= 0) {
+        int u = id_map[i][j];
+        for (int di = -1; di <= 1; di++) for (int dj = -1; dj <= 1; dj++) {
+            if (di==0 && dj==0) continue;
+            int ni = i+di, nj = j+dj;
+            if (ni>=0 && ni<n && nj>=0 && nj<m && id_map[ni][nj]>=0) {
+                int v = id_map[ni][nj];
+                adj_loc[u][v] = 1;
+            }
+        }
+    }
+
+    // 3) apelăm solver pe acest graf
+    solve_task4_file(N, adj_loc, coords, out);
+
+    // 4) recursivitate
+    if (depth < K) {
+        // regula B
+        char **matB = apply_rule_B(cur, n, m);
+        traverse_hamilton(root->left, matB, n, m, depth+1, K, out);
+        free_matrix(matB, n);
+        // regula standard
+        char **matS = copy_matrix(cur, n, m);
+        rules(matS, n, m);
+        traverse_hamilton(root->right, matS, n, m, depth+1, K, out);
+        free_matrix(matS, n);
+    }
+}
