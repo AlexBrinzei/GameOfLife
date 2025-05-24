@@ -579,6 +579,7 @@ static int lex_less(int a[][2], int b[][2], int len) {
     return 0;
 }
 
+
 static void dfs_bt(int u, int depth) {
     path_stack[depth-1] = u;
     if (depth > best_len) {
@@ -608,67 +609,221 @@ static void dfs_bt(int u, int depth) {
     }
 }
 
+// void solve_task4_file(int N, int adj[][MAXN], int coords[][2], FILE *out) {
+//     // 1) găsim componente conexe prin DFS simplu
+//     int comp_id[MAXN] = {0}, comp_cnt = 0;
+//     int seen[MAXN] = {0}, stack[MAXN], top;
+//     for (int i = 0; i < N; i++) {
+//         if (!seen[i]) {
+//             top = 0; stack[top++] = i;
+//             seen[i] = 1;
+//             comp_id[i] = comp_cnt;
+//             while (top) {
+//                 int u = stack[--top];
+//                 for (int v = 0; v < N; v++) if (adj[u][v] && !seen[v]) {
+//                     seen[v] = 1;
+//                     comp_id[v] = comp_cnt;
+//                     stack[top++] = v;
+//                 }
+//             }
+//             comp_cnt++;
+//         }
+//     }
+
+//     // 2) pentru fiecare componentă, extragem subgraf și coordonate
+//     int best_overall = -1, best_comp = -1;
+//     int best_output[MAXN][2], best_output_len = 0;
+//     for (int c = 0; c < comp_cnt; c++) {
+//         // colecționăm nodurile componentei
+//         int idx = 0, map_local[MAXN];
+//         for (int i = 0; i < N; i++)
+//             if (comp_id[i] == c) map_local[i] = idx++;
+//         gN = idx;
+//         if (gN == 0) continue;
+
+//         // construim matrice locală și coordonate locale
+//         memset(gadj, 0, sizeof(gadj));
+//         for (int i = 0; i < N; i++) if (comp_id[i] == c) {
+//             int u = map_local[i];
+//             memcpy(temp_coords[u], coords[i], 2*sizeof(int));
+//             for (int j = 0; j < N; j++) if (comp_id[j] == c && adj[i][j]) {
+//                 int v = map_local[j];
+//                 gadj[u][v] = 1;
+//             }
+//         }
+
+//         // Verificăm gradul nodurilor pentru excluderea componentelor imposibile
+//         int degree[MAXN] = {0};
+//         int deg_1_count = 0;
+//         int isolated_node = 0;
+//         for (int u = 0; u < gN; u++) {
+//             int deg = 0;
+//             for (int v = 0; v < gN; v++)
+//                 deg += gadj[u][v];
+//             degree[u] = deg;
+//             if (deg == 1) deg_1_count++;
+//             if (deg == 0) isolated_node = 1;
+//         }
+//         if (isolated_node || deg_1_count > 2) {
+//             // Componenta nu poate avea lanț Hamiltonian complet
+//             continue;
+//         }
+
+//         // backtracking pe fiecare nod
+//         best_len = 0;
+//         memset(visited_local, 0, sizeof(visited_local));
+//         for (int i = 0; i < gN; i++) {
+//             visited_local[i] = 1;
+//             dfs_bt(i, 1);
+//             visited_local[i] = 0;
+//             if (best_len == gN) break;
+//         }
+
+//         // comparăm cu soluția globală
+//         if (best_len > best_overall) {
+//             best_overall = best_len;
+//             best_comp = c;
+//             best_output_len = best_len;
+//             memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
+//         } else if (best_len == best_overall && best_len > 0) {
+//             if (lex_less(best_coords, best_output, best_len)) {
+//                 best_output_len = best_len;
+//                 memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
+//             }
+//         }
+//     }
+
+//     // 3) tipărim rezultatul
+//     if (best_overall <= 0)
+//     {
+//         if (N == 1)
+//         {
+//             // cazul: o singură celulă vie = lanț de 1 nod, 0 muchii
+//             fprintf(out, "0\n");
+//             fprintf(out, "(%d,%d)\n", coords[0][0] + 1, coords[0][1] + 1);
+//         }
+//         else
+//         {
+//             // poate fi mai multe componente dar fără lanț complet
+//             int all_isolated = 1;
+//             for (int i = 0; i < N; i++)
+//             {
+//                 int has_neighbor = 0;
+//                 for (int j = 0; j < N; j++)
+//                 {
+//                     if (adj[i][j])
+//                     {
+//                         has_neighbor = 1;
+//                         break;
+//                     }
+//                 }
+//                 if (has_neighbor)
+//                 {
+//                     all_isolated = 0;
+//                     break;
+//                 }
+//             }
+
+//             if (all_isolated && N == 1)
+//             {
+//                 fprintf(out, "0\n");
+//                 fprintf(out, "(%d,%d)\n", coords[0][0] + 1, coords[0][1] + 1);
+//             }
+//             else
+//             {
+//                 fprintf(out, "-1\n");
+//             }
+//         }
+//     }
+//     else
+//     {
+//         // lungimea e numărul de muchii (noduri - 1)
+//         fprintf(out, "%d\n", best_overall - 1);
+//         for (int i = 0; i < best_output_len; i++)
+//         {
+//             fprintf(out, "(%d,%d)%c",
+//                     best_output[i][0],
+//                     best_output[i][1],
+//                     (i + 1 < best_output_len ? ' ' : '\n'));
+//         }
+//     }
+// }
+
 void solve_task4_file(int N, int adj[][MAXN], int coords[][2], FILE *out) {
-    // 1) găsim componente conexe prin DFS simplu
-    int comp_id[MAXN] = {0}, comp_cnt = 0;
-    int seen[MAXN] = {0}, stack[MAXN], top;
+    int comp_id[MAXN], comp_cnt = 0;
+    for (int i = 0; i < N; i++) comp_id[i] = -1;
+
     for (int i = 0; i < N; i++) {
-        if (!seen[i]) {
-            top = 0; stack[top++] = i;
-            seen[i] = 1;
-            comp_id[i] = comp_cnt;
-            while (top) {
-                int u = stack[--top];
-                for (int v = 0; v < N; v++) if (adj[u][v] && !seen[v]) {
-                    seen[v] = 1;
+        if (comp_id[i] != -1) continue;
+
+        int has_edge = 0;
+        for (int j = 0; j < N; j++) {
+            if (adj[i][j]) {
+                has_edge = 1;
+                break;
+            }
+        }
+
+        if (!has_edge) {
+            comp_id[i] = comp_cnt++;
+            continue;
+        }
+
+        int stack[MAXN], top = 0;
+        stack[top++] = i;
+        comp_id[i] = comp_cnt;
+        while (top) {
+            int u = stack[--top];
+            for (int v = 0; v < N; v++) {
+                if (adj[u][v] && comp_id[v] == -1) {
                     comp_id[v] = comp_cnt;
                     stack[top++] = v;
                 }
             }
-            comp_cnt++;
         }
+        comp_cnt++;
     }
 
-    // 2) pentru fiecare componentă, extragem subgraf și coordonate
-    int best_overall = -1, best_comp = -1;
+    int best_overall = -1;
     int best_output[MAXN][2], best_output_len = 0;
-    for (int c = 0; c < comp_cnt; c++) {
-        // colecționăm nodurile componentei
-        int idx = 0, map_local[MAXN];
-        for (int i = 0; i < N; i++)
-            if (comp_id[i] == c) map_local[i] = idx++;
-        gN = idx;
-        if (gN == 0) continue;
 
-        // construim matrice locală și coordonate locale
-        memset(gadj, 0, sizeof(gadj));
-        for (int i = 0; i < N; i++) if (comp_id[i] == c) {
-            int u = map_local[i];
-            memcpy(temp_coords[u], coords[i], 2*sizeof(int));
-            for (int j = 0; j < N; j++) if (comp_id[j] == c && adj[i][j]) {
-                int v = map_local[j];
-                gadj[u][v] = 1;
+    for (int c = 0; c < comp_cnt; c++) {
+        int map_global_to_local[MAXN], map_local_to_global[MAXN], idx = 0;
+        for (int i = 0; i < N; i++) {
+            if (comp_id[i] == c) {
+                map_global_to_local[i] = idx;
+                map_local_to_global[idx] = i;
+                idx++;
             }
         }
 
-        // Verificăm gradul nodurilor pentru excluderea componentelor imposibile
-        int degree[MAXN] = {0};
-        int deg_1_count = 0;
-        int isolated_node = 0;
-        for (int u = 0; u < gN; u++) {
-            int deg = 0;
-            for (int v = 0; v < gN; v++)
-                deg += gadj[u][v];
-            degree[u] = deg;
-            if (deg == 1) deg_1_count++;
-            if (deg == 0) isolated_node = 1;
-        }
-        if (isolated_node || deg_1_count > 2) {
-            // Componenta nu poate avea lanț Hamiltonian complet
-            continue;
+        gN = idx;
+        if (gN == 0) continue;
+
+        memset(gadj, 0, sizeof(gadj));
+        for (int i = 0; i < gN; i++) {
+            int gi = map_local_to_global[i];
+            temp_coords[i][0] = coords[gi][0];
+            temp_coords[i][1] = coords[gi][1];
+
+            for (int j = 0; j < gN; j++) {
+                int gj = map_local_to_global[j];
+                if (adj[gi][gj]) {
+                    gadj[i][j] = 1;
+                }
+            }
         }
 
-        // backtracking pe fiecare nod
+        int isolated = 0, deg1 = 0;
+        for (int u = 0; u < gN; u++) {
+            int deg = 0;
+            for (int v = 0; v < gN; v++) deg += gadj[u][v];
+            if (deg == 0) isolated = 1;
+            if (deg == 1) deg1++;
+        }
+
+        if (gN > 1 && (isolated || deg1 > 2)) continue;
+
         best_len = 0;
         memset(visited_local, 0, sizeof(visited_local));
         for (int i = 0; i < gN; i++) {
@@ -677,34 +832,60 @@ void solve_task4_file(int N, int adj[][MAXN], int coords[][2], FILE *out) {
             visited_local[i] = 0;
             if (best_len == gN) break;
         }
+        if (best_len < gN) continue;  // ignoră dacă lanțul nu e complet Hamiltonian
 
-        // comparăm cu soluția globală
+
         if (best_len > best_overall) {
             best_overall = best_len;
-            best_comp = c;
             best_output_len = best_len;
-            memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
-        } else if (best_len == best_overall && best_len > 0) {
+            memcpy(best_output, best_coords, sizeof(best_coords));
+        } else if (best_len == best_overall) {
             if (lex_less(best_coords, best_output, best_len)) {
                 best_output_len = best_len;
-                memcpy(best_output, best_coords, best_len*sizeof(best_coords[0]));
+                memcpy(best_output, best_coords, sizeof(best_coords));
             }
         }
     }
 
-    // 3) tipărim rezultatul
     if (best_overall <= 0) {
-        fprintf(out, "-1\n");
+        if (N == 1) {
+            fprintf(out, "0\n");
+            fprintf(out, "(%d,%d)\n", coords[0][0] + 1, coords[0][1] + 1);
+        } else {
+            int all_isolated = 1;
+            for (int i = 0; i < N; i++) {
+                int has_neighbor = 0;
+                for (int j = 0; j < N; j++) {
+                    if (adj[i][j]) {
+                        has_neighbor = 1;
+                        break;
+                    }
+                }
+                if (has_neighbor) {
+                    all_isolated = 0;
+                    break;
+                }
+            }
+
+            if (all_isolated && N == 1) {
+                fprintf(out, "0\n");
+                fprintf(out, "(%d,%d)\n", coords[0][0] + 1, coords[0][1] + 1);
+            } else {
+                fprintf(out, "-1\n");
+            }
+        }
     } else {
         fprintf(out, "%d\n", best_overall - 1);
         for (int i = 0; i < best_output_len; i++) {
             fprintf(out, "(%d,%d)%c",
                 best_output[i][0],
                 best_output[i][1],
-                (i+1 < best_output_len ? ' ' : '\n'));
+                (i + 1 < best_output_len ? ' ' : '\n'));
         }
     }
 }
+
+
 
 
 // traverse_hamilton: reconstruiește din matricea curentă graful și apelează solve_task4_file
