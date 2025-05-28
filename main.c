@@ -1,6 +1,5 @@
 #include "header.h"
 
-
 int main(int argc, const char *argv[])
 {
     // deschide fisierul de intrare in modul text read
@@ -19,13 +18,59 @@ int main(int argc, const char *argv[])
         fclose(file);
         return 1;
     }
-
-    // citeste parametrii t, n, m, k si matricea initiala din fisier
     int t, n, m, k;
+    // citim task, dimensiuni si numar pasi
+    if (fscanf(file, "%d %d %d %d", &t, &n, &m, &k) != 4) {
+        fprintf(stderr, "Invalid input header\n");
+        fclose(file);
+        fclose(output);
+        return 1;
+    }
+
+    if (t == 5) {
+        // -- TASK 2 BONUS: reconstruct initial state from final matrix + diffs --
+        // 1) Citim matricea finala (generatia K)
+        char **mat = malloc(n * sizeof(*mat));
+        for (int i = 0; i < n; i++) {
+            mat[i] = malloc(m * sizeof(*mat[i]));
+            for (int j = 0; j < m; j++) {
+                fscanf(file, " %c", &mat[i][j]);
+            }
+        }
+
+        // 2) Citim stiva de diferente
+        Generation *stack = NULL;
+        for (int gen = 1; gen <= k; gen++) {
+            CellNode *changes = NULL;
+            int r, c;
+            while (fscanf(file, "%d %d", &r, &c) == 2) {
+                insert_cell_sorted(&changes, r, c);
+                int ch = fgetc(file);
+                if (ch == '\n' || ch == EOF) break;
+                ungetc(ch, file);
+            }
+            push(&stack, changes);
+        }
+
+        // 3) Reconstruim generatia 0
+        reconstruct_initial_state(mat, &stack);
+
+        // 4) Afisam generatia 0
+        display(mat, n, m, output);
+
+        // 5) Cleanup
+        delete_stack(&stack);
+        for (int i = 0; i < n; i++) free(mat[i]);
+        free(mat);
+
+        fclose(file);
+        fclose(output);
+        return 0;
+    }
+
     char **mat;
     read_file(file, &t, &n, &m, &k, &mat);
-
-    // daca task-ul este 1: afiseaza fiecare generatie aplicand regulile standard
+    // afiseaza fiecare generatie aplicand regulile standard
     if (t == 1)
     {
         for (int gen = 0; gen <= k; gen++)
@@ -39,6 +84,56 @@ int main(int argc, const char *argv[])
         free_matrix(mat, n);
         return 0;
     }
+
+    // task 1 bonus de pe teams cu stiva de liste
+
+    // if (t == 1)
+    // {
+    //     Generation *stack = NULL;
+
+    //     // matricea initiala
+    //     char **gen0 = copy_matrix(mat, n, m);
+    //     char **prev = copy_matrix(mat, n, m);
+
+    //     // genereaza K diferente si le salveaza in stiva
+    //     for (int gen = 1; gen <= k; gen++)
+    //     {
+    //         rules(mat, n, m); // obtinem generatia urmatoare
+    //         CellNode *diff = gen_differences(prev, mat, n, m);
+    //         push(&stack, diff);
+
+    //         // copiem mat in prev pentru pasul urmator
+    //         for (int i = 0; i < n; i++)
+    //             for (int j = 0; j < m; j++)
+    //                 prev[i][j] = mat[i][j];
+    //     }
+
+    //     // copia primei generatii
+    //     char **cur = copy_matrix(gen0, n, m);
+
+    //     Generation *rev = reverse_stack(stack);
+
+    //     // afisarea primei generatii
+    //     display(cur, n, m, output);
+
+    //     // reconstruim fiecare generatie de la 1 la K
+    //     while (rev)
+    //     {
+    //         apply_inverse(cur, rev->cells); // aplicam modificarile generatiei urmatoare
+    //         display(cur, n, m, output);     // afisam
+    //         rev = rev->next;
+    //     }
+
+    //     // eliberam memoria
+    //     delete_stack(&stack);
+    //     free_matrix(gen0, n);
+    //     free_matrix(prev, n);
+    //     free_matrix(cur, n);
+    //     free_matrix(mat, n);
+    //     fclose(file);
+    //     fclose(output);
+    //     return 0;
+    // }
 
     // daca task-ul este 2: salveaza doar diferentele in stiva si le scrie
     if (t == 2)
@@ -86,14 +181,15 @@ int main(int argc, const char *argv[])
         fclose(output);
         return 0;
     }
-     
-        if (t == 4) {
-        // generăm arborele de diferențe
+
+    if (t == 4)
+    {
+        // generam arborele de diferente
         char **empty = create_empty_matrix(n, m, '+');
-        Tree *root   = build_diff_tree(empty, mat, n, m, 0, k);
-        // parcurgem și rezolvăm Hamilton pentru fiecare generație
+        Tree *root = build_diff_tree(empty, mat, n, m, 0, k);
+        // parcurgem si rezolvam Hamilton pentru fiecare generatie
         traverse_hamilton(root, mat, n, m, 0, k, output);
-        // eliberăm
+        // eliberam memoria
         free_tree(root);
         free_matrix(empty, n);
         free_matrix(mat, n);
@@ -102,46 +198,5 @@ int main(int argc, const char *argv[])
         return 0;
     }
 
-
-    // // BONUS: daca task-ul este task 2 bonus => reconstruim generatia 0 din matricea K + stiva
-    // if (t == 5)
-    // {
-    //     // initializam stiva
-    //     Generation *stack = NULL;
-
-    //     // citim K linii cu diferentele dintre generatii si le punem in stiva
-    //     for (int gen = 1; gen <= k; gen++)
-    //     {
-            
-
-    //         CellNode *changes = NULL;
-    //         int l, c;
-    //         // citim perechile pana la sfarsitul liniei
-    //         while (fscanf(file, "%d %d", &l, &c) == 2)
-    //         {
-    //             insert_cell_sorted(&changes, l, c);
-    //             int ch = fgetc(file);
-    //             if (ch == '\n' || ch == EOF) break;
-    //             else ungetc(ch, file);
-    //         }
-
-    //         // impingem in stiva
-    //         push(&stack, changes);
-    //     }
-
-    //     // reconstruim matricea initiala din matricea K si diferentele din stiva
-    //     reconstruct_initial_state(mat, &stack);
-
-    //     // afisam rezultatul in fisierul de iesire
-    //     display(mat, n, m, output);
-
-    //     free_matrix(mat, n);
-    //     fclose(file);
-    //     fclose(output);
-    //     return 0;
-    // }
-
-   
-    
     return 0;
 }
