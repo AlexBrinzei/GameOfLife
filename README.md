@@ -1,86 +1,97 @@
-# README
+## General Description
 
-## Descriere generala
+This project implements extensions for Conway’s Game of Life, according to the requirements of the “Algorithm Design” course. The program manages generations of living and dead cells and offers four distinct tasks that:
 
-Acest proiect implementeaza extensii pentru Game of Life, conform cerintelor din cursul de Proiectarea Algoritmilor. Programul gestioneaza generatii de celule vii si moarte si ofera 4 taskuri distincte, care simuleaza evolutia jocului, comprima diferentele, construieste un arbore si cauta drumuri Hamiltoniene in generatii.
+1. Simulate the evolution of the game.
+2. Compress the differences between generations.
+3. Build a difference tree.
+4. Search for Hamiltonian paths within generations.
 
-Pentru specificatiile complete:  
-https://site-pa.netlify.app/proiecte/game_of_life/
+For full specifications, see:
+[https://site-pa.netlify.app/proiecte/game\_of\_life/](https://site-pa.netlify.app/proiecte/game_of_life/)
 
-## Rulare si compilare
+## Build and Run
 
-### Cerinte
-- compilator C standard (ex: gcc)
-- sistem POSIX (Linux/macOS/WSL)
-- fisiere: main.c, header.c, header.h
+### Requirements
 
-### Compilare
-```
+* A standard C compiler (e.g., `gcc`)
+* POSIX-compliant system (Linux/macOS/WSL)
+* Source files: `main.c`, `header.c`, `header.h`
+
+### Compilation
+
+```bash
 gcc -o game main.c header.c
 ```
 
-### Executie
-```
+### Execution
+
+```bash
 ./game input.txt output.txt
 ```
-- input.txt contine task-ul, dimensiunile, numarul de pasi si matricea initiala
-- output.txt va contine rezultatul cerut
 
-## Structura proiectului
+* **`input.txt`** contains the task number, grid dimensions, number of steps, and the initial matrix.
+* **`output.txt`** will contain the requested result.
 
-| Fisier        | Rol                                                                 |
-|---------------|----------------------------------------------------------------------|
-| main.c        | gestioneaza fluxul programului: citire input, apeluri, output       |
-| header.c      | contine toate functiile principale de procesare si logica           |
-| header.h      | declaratii de functii si structuri (Tree, Generation, CellNode etc) |
+## Project Structure
 
-## Functionalitati / Taskuri
+| File       | Role                                                                          |
+| ---------- | ----------------------------------------------------------------------------- |
+| `main.c`   | Controls program flow: reads input, invokes tasks, writes output              |
+| `header.c` | Implements core logic and processing functions                                |
+| `header.h` | Declares all functions and data structures (Tree, Generation, CellNode, etc.) |
 
-### Task 1: Simulare Game of Life
-- Afiseaza toate cele k+1 generatii obtinute prin aplicarea regulilor standard.
-- Complexitate: O(k * n * m)
+## Features / Tasks
 
-### Task 2: Diferente intre generatii
-- Calculeaza diferentele dintre generatii si le salveaza intr-o stiva.
-- Outputul contine doar celulele modificate.
-- Complexitate: O(k * n * m)
+### Task 1: Game of Life Simulation
 
-### Task 3: Arbore de diferente
-- Construieste un arbore binar al generatiilor, pe k nivele, folosind reguli standard si regula B.
-- Parcurge acest arbore in preordine si afiseaza fiecare generatie.
-- Numar noduri arbore: 2^k
-- Complexitate: O(2^k * n * m)
+* Outputs all **k+1** generations produced by applying the standard rules.
+* **Time complexity:** O(k · n · m)
 
-### Task 4: Drum Hamiltonian
-- Pentru fiecare generatie din arbore, construieste un graf si cauta cel mai lung drum Hamiltonian (cu backtracking).
-- Alege cel mai lung drum, iar daca sunt mai multe, cel lexicografic minim.
-- Complexitate worst case: O(N!) per componenta (dar optimizat cu verificari prealabile)
+### Task 2: Generation Differences
 
-## Structuri de date
+* Computes differences between consecutive generations and stores them in a stack.
+* Output includes only the cells that changed state.
+* **Time complexity:** O(k · n · m)
 
-- CellNode – lista de celule active (noduri)
-- Generation – stiva cu diferente intre generatii
-- Tree – arbore binar cu diferente intre generatii (regula B si standard)
-- char **mat – matricea generala de celule
+### Task 3: Difference Tree
 
-## Functii importante
+* Builds a binary tree of generations up to depth k, using both the standard rule and “Rule B.”
+* Traverses the tree in preorder and prints each generation.
+* **Number of nodes:** 2ᵏ
+* **Time complexity:** O(2ᵏ · n · m)
 
-| Functie               | Descriere                                                                 | Complexitate           |
-|-----------------------|---------------------------------------------------------------------------|------------------------|
-| read_file             | citeste inputul din fisier                                                | O(n * m)               |
-| rules                 | aplica regulile standard Game of Life                                     | O(n * m)               |
-| apply_rule_B          | regula alternativa: invie celulele moarte cu 2 vecini                     | O(n * m)               |
-| gen_differences       | construieste lista de celule modificate intre doua generatii              | O(n * m)               |
-| build_diff_tree       | construieste arborele pe baza regulilor                                   | O(2^k * n * m)         |
-| dfs_hamilton          | cauta cel mai lung drum Hamiltonian cu backtracking                       | O(N!) worst case       |
-| solve_task4_file      | gestioneaza grafurile si drumurile pe fiecare componenta                  | O(N! + N^2) approx.    |
-| find_components       | gaseste componentele conexe cu DFS                                        | O(N^2)                 |
-| is_valid_component    | verifica rapid daca o componenta poate avea drum Hamiltonian              | O(N^2)                 |
-| find_best_from_all    | incearca toate nodurile din componenta ca start pentru dfs_hamilton       | O(N * N!) worst case   |
+### Task 4: Hamiltonian Path
 
-## Alte observatii
+* For each generation in the tree, constructs a graph of live-cell clusters and searches for the longest Hamiltonian path using backtracking.
+* Selects the longest path; in ties, picks the lexicographically smallest.
+* **Worst-case time complexity:** O(N!) per connected component (with pre-check optimizations)
 
-- programul evita calculele inutile folosind validari prealabile (is_valid_component)
-- toate structurile sunt gestionate manual, fara memory leaks
-- codul este modular si permite extinderea usoara
-- output-ul este consistent, usor de validat automat
+## Data Structures
+
+* **CellNode** – linked list node for active cells
+* **Generation** – stack of cell-difference lists between generations
+* **Tree** – binary tree of generation differences (standard vs. Rule B)
+* **`char **mat`** – 2D array representing the full grid
+
+## Key Functions
+
+| Function             | Description                                                     | Complexity           |
+| -------------------- | --------------------------------------------------------------- | -------------------- |
+| `read_file`          | Reads input from file                                           | O(n · m)             |
+| `rules`              | Applies standard Game of Life rules                             | O(n · m)             |
+| `apply_rule_B`       | Alternative rule: revives dead cells with exactly two neighbors | O(n · m)             |
+| `gen_differences`    | Builds a list of changed cells between two generations          | O(n · m)             |
+| `build_diff_tree`    | Constructs the binary tree according to the two rules           | O(2ᵏ · n · m)        |
+| `dfs_hamilton`       | Backtracking search for the longest Hamiltonian path            | O(N!) worst case     |
+| `solve_task4_file`   | Manages graph creation and path search for each component       | O(N! + N²) approx.   |
+| `find_components`    | Identifies connected components via DFS                         | O(N²)                |
+| `is_valid_component` | Quickly checks if a component can have a Hamiltonian path       | O(N²)                |
+| `find_best_from_all` | Attempts backtracking from every node in a component            | O(N · N!) worst case |
+
+## Additional Notes
+
+* Pre-checks (`is_valid_component`) avoid unnecessary expensive computations.
+* All data structures are manually managed to prevent memory leaks.
+* The code is modular, facilitating easy extension.
+* Outputs are consistent and easy to validate automatically.
