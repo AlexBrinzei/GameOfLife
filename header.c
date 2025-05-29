@@ -712,18 +712,18 @@ void traverse_hamilton(Tree *root, char **cur, int n, int m, int depth, int K, F
     {
         for (int j = 0; j < N; j++)
         {
-            if (i == j)
+            if (i == j)// nu punem muchia de la nod
             {
                 adj[i][j] = 0;
             }
             else
-            {
+            {//calculam diferenta de rand si de coloana intre cele doua celule 
                 if ((coords[i][0] - coords[j][0]) >= -1 && (coords[i][0] - coords[j][0]) <= 1 && (coords[i][1] - coords[j][1]) >= -1 && (coords[i][1] - coords[j][1]) <= 1)
-                {
+                {//sunt adiacente
                     adj[i][j] = 1;
                 }
                 else
-                {
+                { //nu sunt adiacente
                     adj[i][j] = 0;
                 }
             }
