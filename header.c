@@ -39,6 +39,20 @@ void read_file(FILE *file, int *t, int *n, int *m, int *k, char ***mat)
     }
 }
 
+// afiseaza matricea in fisier, fara spatii intre caractere
+void display(char **mat, int n, int m, FILE *output)
+{
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            fputc(mat[i][j], output); // NU %d, NU 0/1, doar caracter
+        }
+        fputc('\n', output);
+    }
+    fputc('\n', output);
+}
+
 // aplica regulile standard ale jocului si scrie rezultatul inapoi in mat
 int rules(char **mat, int n, int m)
 {
@@ -69,25 +83,33 @@ int rules(char **mat, int n, int m)
             // verificam randul de deasupra
             if (i > 0)
             {
-                if (j > 0 && mat[i - 1][j - 1] == 'X') neighbours_alive++;
-                if (mat[i - 1][j] == 'X')               neighbours_alive++;
-                if (j < m - 1 && mat[i - 1][j + 1] == 'X') neighbours_alive++;
+                if (j > 0 && mat[i - 1][j - 1] == 'X')
+                    neighbours_alive++;
+                if (mat[i - 1][j] == 'X')
+                    neighbours_alive++;
+                if (j < m - 1 && mat[i - 1][j + 1] == 'X')
+                    neighbours_alive++;
             }
             // celula stanga si dreapta
-            if (j > 0 && mat[i][j - 1] == 'X')       neighbours_alive++;
-            if (j < m - 1 && mat[i][j + 1] == 'X')   neighbours_alive++;
+            if (j > 0 && mat[i][j - 1] == 'X')
+                neighbours_alive++;
+            if (j < m - 1 && mat[i][j + 1] == 'X')
+                neighbours_alive++;
             // verificam randul de sub
             if (i < n - 1)
             {
-                if (j > 0 && mat[i + 1][j - 1] == 'X') neighbours_alive++;
-                if (mat[i + 1][j] == 'X')               neighbours_alive++;
-                if (j < m - 1 && mat[i + 1][j + 1] == 'X') neighbours_alive++;
+                if (j > 0 && mat[i + 1][j - 1] == 'X')
+                    neighbours_alive++;
+                if (mat[i + 1][j] == 'X')
+                    neighbours_alive++;
+                if (j < m - 1 && mat[i + 1][j + 1] == 'X')
+                    neighbours_alive++;
             }
 
             // regulile
             if (mat[i][j] == 'X')
             {
-                //subpopulare sau suprapopulare
+                // subpopulare sau suprapopulare
                 if (neighbours_alive < 2 || neighbours_alive > 3)
                     aux[i][j] = '+';
                 else
@@ -118,6 +140,48 @@ int rules(char **mat, int n, int m)
     return 0;
 }
 
+// copiaza matricea si returneaza un pointer nou
+char **copy_matrix(char **mat, int n, int m)
+{
+    // alocam vectorul de pointeri pentru cele n linii
+    char **c = malloc(n * sizeof(char *));
+    if (!c) return NULL;
+
+    for (int i = 0; i < n; i++)
+    {
+        // alocam fiecare linie
+        c[i] = malloc(m * sizeof(char));
+        if (!c[i]) {
+            for (int k = 0; k < i; k++)
+                free(c[k]);
+            free(c);
+            return NULL;
+        }
+        for (int j = 0; j < m; j++)
+        {
+            c[i][j] = mat[i][j];
+        }
+    }
+
+    return c;
+}
+
+
+// genereaza lista de diferente intre doua matrici
+CellNode *gen_differences(char **old_gen, char **new_gen, int n, int m)
+{
+    CellNode *diffs = NULL;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (old_gen[i][j] != new_gen[i][j])
+                insert_cell_sorted(&diffs, i, j);
+        }
+    }
+    return diffs;
+}
+
 // elibereaza memoria alocata pentru matrice
 void free_matrix(char **mat, int n)
 {
@@ -126,16 +190,6 @@ void free_matrix(char **mat, int n)
     free(mat);
 }
 
-// afiseaza matricea in fisier, fara spatii intre caractere
-void display(char **mat, int n, int m, FILE *output)
-{
-    for (int i = 0; i < n; i++)
-    {
-        fwrite(mat[i], 1, m, output);
-        fputc('\n', output);
-    }
-    fputc('\n', output); // linie goala intre afisari
-}
 
 // creeaza un nod nou pentru lista de celule modificate
 CellNode *create_cell_node(int row, int col)
@@ -236,20 +290,7 @@ void insert_cell_sorted(CellNode **head, int row, int col)
     cur->next      = new_node;
 }
 
-// genereaza lista de diferente intre doua matrici
-CellNode *gen_differences(char **old_gen, char **new_gen, int n, int m)
-{
-    CellNode *diffs = NULL;
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < m; j++)
-        {
-            if (old_gen[i][j] != new_gen[i][j])
-                insert_cell_sorted(&diffs, i, j);
-        }
-    }
-    return diffs;
-}
+
 
 // scrie in fisier continutul stivei cu index de generatie si coordonate
 void write_stack_to_file(Generation *top, FILE *f)
@@ -323,31 +364,7 @@ char **apply_rule_B(char **mat, int n, int m)
 }
 
 
-// copiaza matricea si returneaza un pointer nou
-char **copy_matrix(char **mat, int n, int m)
-{
-    // alocam vectorul de pointeri pentru cele n linii
-    char **c = malloc(n * sizeof(char *));
-    if (!c) return NULL;
 
-    for (int i = 0; i < n; i++)
-    {
-        // alocam fiecare linie
-        c[i] = malloc(m * sizeof(char));
-        if (!c[i]) {
-            for (int k = 0; k < i; k++)
-                free(c[k]);
-            free(c);
-            return NULL;
-        }
-        for (int j = 0; j < m; j++)
-        {
-            c[i][j] = mat[i][j];
-        }
-    }
-
-    return c;
-}
 
 
 // construieste recursiv arborele de diferente
@@ -440,7 +457,6 @@ void apply_inverse(char **mat, CellNode *changes)
         int i = changes->row;
         int j = changes->col;
 
-        // inversam starea celulei
         if (mat[i][j] == 'X')
             mat[i][j] = '+';
         else
@@ -449,6 +465,7 @@ void apply_inverse(char **mat, CellNode *changes)
         changes = changes->next;
     }
 }
+
 
 // reconstruieste matricea initiala (generatia 0) din matricea finala si stiva de diferente
 void reconstruct_initial_state(char **mat, Generation **stack)
@@ -463,8 +480,8 @@ void reconstruct_initial_state(char **mat, Generation **stack)
 
 // task 4
 
-// compara doua drumuri dupa coordonate, lexicografic
-int is_lex_smaller(int a[][2], int b[][2], int length)
+// compara doua drumuri dupa coordonate
+int is_smaller(int a[][2], int b[][2], int length)
 {
     for (int i = 0; i < length; i++)
     {
@@ -478,32 +495,32 @@ int is_lex_smaller(int a[][2], int b[][2], int length)
 
 // dfs cu backtracking pentru a construi lantul cel mai lung (idee din curs 9, DFS recursiv)
 void dfs_hamilton(
-    int node,
-    int depth,
-    int total,
-    int adj[100][100],
-    int visited[100],
-    int path[100],
-    int coords[100][2],
-    int *best_len,
-    int best_coords[100][2],
-    int nodes[100] // aici ai indexii reali
+    int node, //index de la drum
+    int depth, // lungimea curenta a drumului
+    int total, // numarul total de noduri din componenta
+    int adj[100][100], //matrice de adiacenta 
+    int visited[100], //vector pentru nodurile deja incluse in graf
+    int path[100], // stocare temporara a indicilor nodurilor
+    int coords[100][2], // coordonatele nodurilor
+    int *best_len, // lungimea celui mai bun drum gasit la un moment dat
+    int best_coords[100][2], // coordonatele celui mai bun drum gasit pana la un moment dat
+    int nodes[100] //vector pentru indexii nodurilor
 ) {
-    path[depth - 1] = node;
+    path[depth - 1] = node;// adaugam nodul 
 
     if (depth > *best_len) {
-        *best_len = depth;
+        *best_len = depth;// actualizam best_len la depth
         for (int i = 0; i < depth; i++) {
-            best_coords[i][0] = coords[path[i]][0];
+            best_coords[i][0] = coords[path[i]][0];//copiez path la best_coords
             best_coords[i][1] = coords[path[i]][1];
         }
-    } else if (depth == *best_len) {
+    } else if (depth == *best_len) {// daca sunt egale le adauga la best_coords dupa ce le compara
         int temp[100][2];
         for (int i = 0; i < depth; i++) {
             temp[i][0] = coords[path[i]][0];
             temp[i][1] = coords[path[i]][1];
         }
-        if (is_lex_smaller(temp, best_coords, depth)) {
+        if (is_smaller(temp, best_coords, depth)) {
             for (int i = 0; i < depth; i++) {
                 best_coords[i][0] = temp[i][0];
                 best_coords[i][1] = temp[i][1];
@@ -511,14 +528,14 @@ void dfs_hamilton(
         }
     }
 
-    if (*best_len == total) return;
+    if (*best_len == total) return;// marcheaza ca a gasit cel mai lung lant
 
     for (int next = 0; next < total; next++) {
-        // accesam in graful original
+        // in graf pentru fiecare vecin next nevizitat, il marchez vizitat si apelez recursiv
         if (!visited[next] && adj[nodes[node]][nodes[next]]) {
             visited[next] = 1;
             dfs_hamilton(next, depth + 1, total, adj, visited, path, coords, best_len, best_coords, nodes);
-            visited[next] = 0;
+            visited[next] = 0;// dupa apel marchez nevizitat
         }
     }
 }
@@ -526,7 +543,8 @@ void dfs_hamilton(
 
 // marcheaza fiecare componenta conexa folosind dfs cu stiva (idee din curs 9)
 void find_components(int n, int adj[100][100], int comp[100], int *comp_count) {
-    for (int i = 0; i < n; i++) comp[i] = -1;
+    for (int i = 0; i < n; i++) 
+        comp[i] = -1;
     *comp_count = 0;
 
     for (int i = 0; i < n; i++) {
@@ -547,7 +565,7 @@ void find_components(int n, int adj[100][100], int comp[100], int *comp_count) {
             }
         }
 
-        (*comp_count)++;
+        (*comp_count)++;// se incrementeaza de fiecare data cand incepe o componenta noua
     }
 }
 
@@ -570,8 +588,7 @@ int is_valid_component(int size, int adj[100][100], int nodes[100]) {
 }
 
 // incearca fiecare nod din componenta ca punct de start pentru dfs_hamilton
-void find_best_from_all(int size, int nodes[100], int adj[100][100], int coords[100][2],
-                        int *best_len, int best_coords[100][2]) {
+void find_best_from_all(int size, int nodes[100], int adj[100][100], int coords[100][2], int *best_len, int best_coords[100][2]) {
     int visited[100] = {0}, path[100];
 
     int temp_coords[100][2];
@@ -643,7 +660,7 @@ void solve_task4_file(int n, int adj[100][100], int coords[100][2], FILE *out) {
         find_best_from_all(count, nodes, adj, coords, &temp_len, temp_coords);
         if (temp_len < count) continue;
 
-        // actualizam drumul global daca este mai lung sau mai mic lexicografic
+        // actualizam drumul daca este mai lung sau mai mic 
         if (temp_len > max_len) {
             max_len = temp_len;
             best_path_len = temp_len;
@@ -652,7 +669,7 @@ void solve_task4_file(int n, int adj[100][100], int coords[100][2], FILE *out) {
                 best_path[i][1] = temp_coords[i][1];
             }
         } else if (temp_len == max_len) {
-            if (is_lex_smaller(temp_coords, best_path, temp_len)) {
+            if (is_smaller(temp_coords, best_path, temp_len)) {
                 for (int i = 0; i < temp_len; i++) {
                     best_path[i][0] = temp_coords[i][0];
                     best_path[i][1] = temp_coords[i][1];

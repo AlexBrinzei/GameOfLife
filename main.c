@@ -19,52 +19,51 @@ int main(int argc, const char *argv[])
         return 1;
     }
     int t, n, m, k;
-    // citim task, dimensiuni si numar pasi
-    if (fscanf(file, "%d %d %d %d", &t, &n, &m, &k) != 4) {
-        fprintf(stderr, "Invalid input header\n");
-        fclose(file);
-        fclose(output);
-        return 1;
-    }
 
-    if (t == 5) {
-        // -- TASK 2 BONUS: reconstruct initial state from final matrix + diffs --
-        // 1) Citim matricea finala (generatia K)
-        char **mat = malloc(n * sizeof(*mat));
-        for (int i = 0; i < n; i++) {
-            mat[i] = malloc(m * sizeof(*mat[i]));
-            for (int j = 0; j < m; j++) {
+    // task 2 bonus
+
+    fscanf(file, "%d %d %d %d", &t, &n, &m, &k);
+     if (t == 5)
+     {
+
+        // alocam matricea si citim matricea finala
+        char **mat = malloc(n * sizeof *mat);
+        for (int i = 0; i < n; i++)
+        {
+            mat[i] = malloc(m * sizeof *mat[i]);
+            for (int j = 0; j < m; j++)
+            {
                 fscanf(file, " %c", &mat[i][j]);
             }
         }
 
-        // 2) Citim stiva de diferente
+        // citim cele k linii de diferente
         Generation *stack = NULL;
-        for (int gen = 1; gen <= k; gen++) {
+        for (int gen = 1; gen <= k; gen++)
+        {
             CellNode *changes = NULL;
-            int r, c;
-            while (fscanf(file, "%d %d", &r, &c) == 2) {
-                insert_cell_sorted(&changes, r, c);
-                int ch = fgetc(file);
-                if (ch == '\n' || ch == EOF) break;
-                ungetc(ch, file);
+            int i, j;
+            // fiecare pereche i j este separata de spatiu
+            while (fscanf(file, "%d %d", &i, &j) == 2)
+            {
+                insert_cell_sorted(&changes, i, j);
+                int c = fgetc(file);
+                if (c == '\n' || c == EOF)
+                    break;
+                ungetc(c, file);
             }
             push(&stack, changes);
         }
 
-        // 3) Reconstruim generatia 0
+        // reconstruim matricea initiala
         reconstruct_initial_state(mat, &stack);
-
-        // 4) Afisam generatia 0
         display(mat, n, m, output);
 
         // 5) Cleanup
         delete_stack(&stack);
-        for (int i = 0; i < n; i++) free(mat[i]);
+        for (int i = 0; i < n; i++)
+            free(mat[i]);
         free(mat);
-
-        fclose(file);
-        fclose(output);
         return 0;
     }
 
